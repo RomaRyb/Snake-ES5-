@@ -42,6 +42,86 @@ var canvas = document.getElementById("canvas");
         ctx.fillText = ("Game Over", width / 2, height / 2)
     };
 
+    /*Block constructor */
+    var Block = function (col, row) {
+        this.col = col;
+        this.row = row;
+    };
+
+    Block.prototype.drawSquare = function (color) {
+        var x = this.col * blockSize;
+        var y = this.row * blockSize;
+        ctx.fillStyle() = color;
+        ctx.fillRect(x, y, blockSize,blockSize);
+    };
+
+    Block.prototype.circle = function (color) {
+        var centerX = this.col * blockSize + blockSize / 2;
+        var centerY = this.row * blockSize + blockSize / 2;
+        ctx.fillStyle() = color;
+        circle(centerX, centerY, blockSize / 2, true);
+    };
+
+    /* compare cells  , create method equal */
+    Block.prototype.equal = function(otherBlock) {
+        return this.col === otherBlock.col && this.row === otherBlock.row;
+    };
+
+    /*Snake constructor*/
+    var Snake = function () {
+        this.segments = [
+            new Block(7, 5),
+            new Block(6, 5),
+            new Block(5, 5)
+        ];
+        this.direction = "right";
+        this.nextDirection = "right";
+    };
+    /*Snake draw */
+    Snake.prototype.draw = function () {
+        for (var i = 0; i < this.segments; i++) {
+            this.segments[i].drawSquare("red");
+        }
+    };
+
+    /*Snake move,  add move method*/
+    Snake.prototype.move = function () { 
+        var head = this.segments[0];
+        var newHead;
+
+        this.direction = this.nextDirection;
+
+        if (this.direction === "right") {
+            newHead = new Block(head.col + 1, head.row);
+        } else if (this.direction === "down") {
+            newHead = new Block(head.col, head.row + 1);
+        } else if (this.direction === "left") {
+            newHead = new Block(head.col - 1, head.row);
+        } else if (this.direction === "up") {
+            newHead = new Block(head.col, head.row - 1);
+        }
+
+        if (this.checkCollision(newHead)) {
+            gameOver();
+            return;
+        }
+
+        this.segments.unshift(newHead);
+
+        if (newHead.equal(applePosition)){ 
+            score++;
+            apple.move();
+        } else {
+            this.segments.pop();
+        }
+    };
+
+
+
+
+
+
+
     setInterval (function() {
         ctx.clearRect(0, 0, width, height);
             drawBorder();
