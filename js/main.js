@@ -1,130 +1,241 @@
 var canvas = document.getElementById("canvas");
     var ctx = canvas.getContext("2d");
 
-    /*determine the height and width of the canvas element */
     var width = canvas.width;
     var height = canvas.height;
-    
-    //we compute the width and height in the cells
-    var blockSize = 10;
 
+    // cell width and height
+    var blockSize = 10;
     var widthInBlocks = width / blockSize;
     var heightInBlocks = height / blockSize;
 
-    // count setup
     var score = 0;
 
-    /*draw a frame*/
-        var drawBorder = function () {
-        ctx.fillStyle = "gray";
-        ctx.fillRect(0, 0, width, blockSize);
-        ctx.fillRect(0, height - blockSize, width, blockSize);
-        ctx.fillRect(0, 0, blockSize, height)
-        ctx.fillRect(width - blockSize, 0, blockSize, height);
+    // frame draw
+    var drawBorder = function () {
+      ctx.fillStyle = "Gray";
+      ctx.fillRect(0, 0, width, blockSize);
+      ctx.fillRect(0, height - blockSize, width, blockSize);
+      ctx.fillRect(0, 0, blockSize, height);
+      ctx.fillRect(width - blockSize, 0, blockSize, height);
     };
 
-    /*display game score in the upper left corner*/
+    // game score in left upper corner
     var drawScore = function () {
-        ctx.font = "15px Courier";
-        ctx.fillStyle = "gold";
-        ctx.textAlign = "left";
-        ctx.textBaseLine = "top";
-        ctx.fillText("Your Score: " + score, blockSize, blockSize);
+      ctx.font = "20px Courier";
+      ctx.fillStyle = "Black";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      ctx.fillText("Счет: " + score, blockSize, blockSize);
     };
 
-
-    var gameOver = function() {
-        //clearInterval(intervalId);
-        ctx.fillStyle = "black";
-        ctx.font = "60px Courier";
-        ctx.textAlign = "center"
-        ctx.textBaseline = "middle";    
-        ctx.fillText = ("Game Over", width / 2, height / 2)
+    // Game over message
+    var gameOver = function () {
+      playing = false;
+      ctx.font = "60px Courier";
+      ctx.fillStyle = "Black";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("Game Over", width / 2, height / 2);
     };
 
-    /*Block constructor */
+    // circle draw
+    var circle = function (x, y, radius, fillCircle) {
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2, false);
+      if (fillCircle) {
+        ctx.fill();
+      } else {
+        ctx.stroke();
+      }
+    };
+
+    // Block constructor (cell)
     var Block = function (col, row) {
-        this.col = col;
-        this.row = row;
+      this.col = col;
+      this.row = row;
     };
 
+    // square draw in position of cell
     Block.prototype.drawSquare = function (color) {
-        var x = this.col * blockSize;
-        var y = this.row * blockSize;
-        ctx.fillStyle() = color;
-        ctx.fillRect(x, y, blockSize,blockSize);
+      var x = this.col * blockSize;
+      var y = this.row * blockSize;
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, blockSize, blockSize);
     };
 
-    Block.prototype.circle = function (color) {
-        var centerX = this.col * blockSize + blockSize / 2;
-        var centerY = this.row * blockSize + blockSize / 2;
-        ctx.fillStyle() = color;
-        circle(centerX, centerY, blockSize / 2, true);
+    // circle draw in position of cell
+    Block.prototype.drawCircle = function (color) {
+      var centerX = this.col * blockSize + blockSize / 2;
+      var centerY = this.row * blockSize + blockSize / 2;
+      ctx.fillStyle = color;
+      circle(centerX, centerY, blockSize / 2, true);
     };
 
-    /* compare cells  , create method equal */
-    Block.prototype.equal = function(otherBlock) {
-        return this.col === otherBlock.col && this.row === otherBlock.row;
+    // cell check with position otherBlock cell
+    Block.prototype.equal = function (otherBlock) {
+      return this.col === otherBlock.col && this.row === otherBlock.row;
     };
 
-    /*Snake constructor*/
+    // Snake constructor
     var Snake = function () {
-        this.segments = [
-            new Block(7, 5),
-            new Block(6, 5),
-            new Block(5, 5)
-        ];
-        this.direction = "right";
-        this.nextDirection = "right";
+      this.segments = [
+        new Block(7, 5),
+        new Block(6, 5),
+        new Block(5, 5)
+      ];
+
+      this.direction = "right";
+      this.nextDirection = "right";
     };
-    /*Snake draw */
+
+    // draw square for each segment of snake body
     Snake.prototype.draw = function () {
-        for (var i = 0; i < this.segments; i++) {
-            this.segments[i].drawSquare("red");
-        }
-    };
+      this.segments[0].drawSquare("LimeGreen");
+      var isEvenSegment = false;
 
-    /*Snake move,  add move method*/
-    Snake.prototype.move = function () { 
-        var head = this.segments[0];
-        var newHead;
-
-        this.direction = this.nextDirection;
-
-        if (this.direction === "right") {
-            newHead = new Block(head.col + 1, head.row);
-        } else if (this.direction === "down") {
-            newHead = new Block(head.col, head.row + 1);
-        } else if (this.direction === "left") {
-            newHead = new Block(head.col - 1, head.row);
-        } else if (this.direction === "up") {
-            newHead = new Block(head.col, head.row - 1);
-        }
-
-        if (this.checkCollision(newHead)) {
-            gameOver();
-            return;
-        }
-
-        this.segments.unshift(newHead);
-
-        if (newHead.equal(applePosition)){ 
-            score++;
-            apple.move();
+      for (var i = 1; i < this.segments.length; i++) {
+        if (isEvenSegment) {
+          this.segments[i].drawSquare("Blue");
         } else {
-            this.segments.pop();
+          this.segments[i].drawSquare("Yellow");
         }
+
+        isEvenSegment = !isEvenSegment; // nex segment will be odd
+      }
     };
 
+    // create new head and add it to snake start, to move it in next direction
+    Snake.prototype.move = function () {
+      var head = this.segments[0];
+      var newHead;
 
+      this.direction = this.nextDirection;
 
+      if (this.direction === "right") {
+        newHead = new Block(head.col + 1, head.row);
+      } else if (this.direction === "down") {
+        newHead = new Block(head.col, head.row + 1);
+      } else if (this.direction === "left") {
+        newHead = new Block(head.col - 1, head.row);
+      } else if (this.direction === "up") {
+        newHead = new Block(head.col, head.row - 1);
+      }
 
+      if (this.checkCollision(newHead)) {
+        gameOver();
+        return;
+      }
 
+      this.segments.unshift(newHead);
 
+      if (newHead.equal(apple.position)) {
+        score++;
+        animationTime -= 5;
+        apple.move(this.segments);
+      } else {
+        this.segments.pop();
+      }
+    };
 
-    setInterval (function() {
-        ctx.clearRect(0, 0, width, height);
-            drawBorder();
-            drawScore();
-            score++;
-    }, 100);
+    // chekiang snake facing with the wall or its body
+    Snake.prototype.checkCollision = function (head) {
+      var leftCollision = (head.col === 0);
+      var topCollision = (head.row === 0);
+      var rightCollision = (head.col === widthInBlocks - 1);
+      var bottomCollision = (head.row === heightInBlocks - 1);
+
+      var wallCollision = leftCollision || topCollision || rightCollision || bottomCollision;
+
+      var selfCollision = false;
+
+      for (var i = 0; i < this.segments.length; i++) {
+        if (head.equal(this.segments[i])) {
+          selfCollision = true;
+        }
+      }
+
+      return wallCollision || selfCollision;
+    };
+
+    // snake direction according to button press
+    Snake.prototype.setDirection = function (newDirection) {
+      if (this.direction === "up" && newDirection === "down") {
+        return;
+      } else if (this.direction === "right" && newDirection === "left") {
+        return;
+      } else if (this.direction === "down" && newDirection === "up") {
+        return;
+      } else if (this.direction === "left" && newDirection === "right") {
+        return;
+      }
+
+      this.nextDirection = newDirection;
+    };
+
+    // Apple constructor
+    var Apple = function () {
+      this.position = new Block(10, 10);
+    };
+
+    // circle draw in apple position
+    Apple.prototype.draw = function () {
+      this.position.drawCircle("LimeGreen");
+    };
+
+    // relocate apple in random position
+    Apple.prototype.move = function (occupiedBlocks) {
+      var randomCol = Math.floor(Math.random() * (widthInBlocks - 2)) + 1;
+      var randomRow = Math.floor(Math.random() * (heightInBlocks - 2)) + 1;
+      this.position = new Block(randomCol, randomRow);
+      
+      // check if apple wasn't relocated it to cell with snake body
+      for (var i = 0; i < occupiedBlocks.length; i++) {
+        if (this.position.equal(occupiedBlocks[i])) {
+          this.move(occupiedBlocks); // call move method again
+          return;
+        }
+      }
+    };
+
+    // create snake and apple object
+    var snake = new Snake();
+    var apple = new Apple();
+
+    // start animation function with setInterval
+    var playing = true;
+    var animationTime = 100;
+
+    // create function of game cycle that call itself with setTimeout
+    var gameLoop = function () {
+      ctx.clearRect(0, 0, width, height);
+      drawScore();
+      snake.move();
+      snake.draw();
+      apple.draw();
+      drawBorder();
+
+      // set false function gameOver
+      if (playing) {
+        setTimeout(gameLoop, animationTime);
+      }
+    };
+
+    // game cycle start
+    gameLoop();
+
+    // button code change
+    var directions = {
+      37: "left",
+      38: "up",
+      39: "right",
+      40: "down"
+    };
+
+    // Event handler keydown (direction button)
+    $("body").keydown(function (event) {
+      var newDirection = directions[event.keyCode];
+      if (newDirection !== undefined) {
+        snake.setDirection(newDirection);
+      }
+    });
